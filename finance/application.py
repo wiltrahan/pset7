@@ -1,7 +1,7 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions
@@ -44,7 +44,7 @@ db = SQL("sqlite:///finance.db")
 @login_required
 def index():
     """Show portfolio of stocks"""
-    return apology("TODO")
+    return render_template("portfolio.html")
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -132,6 +132,17 @@ def register():
         # Ensure passwords match
         elif not request.form.get("password") == request.form.get("confirmation"):
             return apology("passwords don't match", 400)
+
+        hash = generate_password_hash(request.form.get("password"))
+
+        user = db.execute("INSERT INTO users (username, hash) VALUES(:username, :hash)",
+                            username=request.form.get("username"), hash=hash)
+
+        session["user_id"] = user
+
+        flash("Welcome to CS50 Finance!")
+
+        return redirect(url_for("index"))
 
     else:
         return render_template("register.html")
